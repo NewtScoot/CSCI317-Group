@@ -74,7 +74,7 @@ struct packet packet_rec;
 struct packet packet_res;
 struct packet packet_multicast;
 struct packet packet_chat[1000];
-pthread_t threads[3];   // need 3 threads in the server
+pthread_t threads[1000];   // need 1000 threads in the server
 int *exit_value;
 int socketId = 0;
 int foundInRecordTable = 0;
@@ -318,7 +318,7 @@ int main(int argc, char* argv[])
                 printf("INCOMING... RECORD NOT FOUND: REQ_NO: %d  SOCK_ID: %d\n", client_info.reqno, client_info.sockid);
                 
                 
-                pthread_create(&threads[0], NULL, join_handler, &client_info);
+                pthread_create(&threads[new_s], NULL, join_handler, &client_info);
                 //pthread_join(threads[0],&exit_value);
                 
             }
