@@ -1,0 +1,2 @@
+Hello, you have subscribed to the multicaster service.  
+If you wish to unsubscribe, then too bad!!!
