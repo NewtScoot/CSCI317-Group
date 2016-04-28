@@ -63,7 +63,7 @@ typedef struct  {
 // multicast buffer
 typedef struct {
     int isRead;
-    global_table packet;
+    struct packet packet;
 }circular_buffer;
 
 
@@ -95,10 +95,10 @@ void waitFor (unsigned int secs) {
 void *multicaster()
 {
     
-//    while(1){
-//        // multicast every 5 seconds
-//        waitFor(5);
-//        
+    while(1){
+        // multicast every 5 seconds
+        //waitFor(5);
+//
 ////        // mutex lock the global table
         pthread_mutex_lock(&my_mutex);
 ////        
@@ -125,32 +125,32 @@ void *multicaster()
 ////            }
 //        
 //            // send message to everyone in the table with request number > 3
-//            // see if client is already in the global record table
-//            for(int i = 0; i < TABLE_SIZE; i++){
-//                
-//                // if the record has at least 3 registration requests
-//                if(record[i].reqno >= 3){
-//                    
-//                    // attempt to send the packet
-//                    if(send(record[i].sockid,&packet_multicast,sizeof(packet_multicast),0) < 0)
-//                    {
-//                        printf("\n Send failed\n");
-//                        exit(1);
-//                    }
-//                    
-//                    // print sent message
-//                    printf("\nSENT MULTICAST MESSAGE TO SOCKET_ID: %d\n", record[i].sockid);
-//                    printf("\tTYPE: %d\n", ntohs(packet_multicast.type));
-//                    printf("\tDATA: %s\n", packet_multicast.data);
-//                }
-//            }
-//        }
+            // see if client is already in the global record table
+            for(int i = 0; i < TABLE_SIZE; i++){
+                
+                // if the record has at least 3 registration requests
+                if(record[i].reqno >= 3){
+                    
+                    // attempt to send the packet
+                    if(send(record[i].sockid,&packet_multicast,sizeof(packet_multicast),0) < 0)
+                    {
+                        printf("\n Send failed\n");
+                        exit(1);
+                    }
+                    
+                    // print sent message
+                    printf("\nSENT MULTICAST MESSAGE TO SOCKET_ID: %d\n", record[i].sockid);
+                    printf("\tTYPE: %d\n", ntohs(packet_multicast.type));
+                    printf("\tDATA: %s\n", packet_multicast.data);
+                }
+            }
+        //}
     
         // mutex unlock the global table
         pthread_mutex_unlock(&my_mutex);
     
-    //}
-    
+    }
+
     
     /* the function must return something - NULL will do */
     return NULL;
