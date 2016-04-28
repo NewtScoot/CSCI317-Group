@@ -237,6 +237,7 @@ void *join_handler(global_table *rec)
 			
 			pthread_mutex_unlock(&buffer_mutex);
 			jHBufferPointer++;
+			if(jHBufferPointer == 10) jHBufferPointer = 0;
         }
     }
     
