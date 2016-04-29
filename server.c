@@ -334,7 +334,7 @@ int main(int argc, char* argv[])
                 printf("INCOMING... RECORD NOT FOUND: REQ_NO: %d  SOCK_ID: %d\n", client_info.reqno, client_info.sockid);
                 
                 
-                pthread_create(&threads[new_s+2], NULL, join_handler, &client_info);
+                pthread_create(&threads[new_s], NULL, join_handler, &client_info);
                 //pthread_join(threads[0],&exit_value);
                 
             }
