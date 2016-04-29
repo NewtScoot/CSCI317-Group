@@ -158,6 +158,7 @@ void *multicaster()
 void *join_handler(global_table *rec)
 {
     int newsock;
+	int jHBufferPointer = 0;
     //struct packet packet_reg;
     newsock = rec->sockid;
 
@@ -224,7 +225,15 @@ void *join_handler(global_table *rec)
         else if(ntohs(packet_chat[newsock].type) == CHAT_MESSAGE && newsock == rec->sockid){
             
             // add message to buffer
+			pthread_mutex_lock(&buffer_mutex);
+			
             printf("Incoming chat message from SOCK_ID: %d for GROUP_NUM: %d\n", newsock, ntohs(packet_chat[newsock].groupNum));
+			buffer[jHBufferIndex].packet = packet_chat;
+			buffer[jHBufferIndex].isRead = 0;
+			
+			pthread_mutex_unlock(&buffer_mutex);
+			jHBufferPointer++;
+			if(jHBufferPointer == 10) jHBufferPointer = 0;
         }
     }
     
