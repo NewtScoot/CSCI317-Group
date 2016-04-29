@@ -59,15 +59,17 @@ void *recv_thread(int *client_sockId)
             exit(1);
         }
         
-        // check if type is 231
-        if(htons(packet_multicast.type) == RESP){
+        // check if type is 421
+        if(htons(packet_multicast.type) == CHAT_MESSAGE){
             
             // print received message
             printf("RECEIVED:\n");
+            printf("\tClient #%d says: %s\n", htons(packet_multicast.sockId), packet_multicast.data);
             //printf("\tTYPE: %d\n", htons(packet_multicast.type));
             //printf("\tSOCK_ID: %d\n", packet_multicast.sockId);
-            printf("\tChat Message: %s\n", packet_multicast.data);
+            //printf("\tChat Message: %s\n", packet_multicast.data);
         }
+
         packet_multicast.type = 0;
     }
     
