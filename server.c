@@ -230,9 +230,9 @@ void *join_handler(global_table *rec)
             printf("Incoming chat message from SOCK_ID: %d for GROUP_NUM: %d\n", newsock, ntohs(packet_chat[newsock].groupNum));
 			
 			// Moving the Message info to the buffer
-			strcpy(packet_chat.data, buffer[jHBufferPointer].packet.data);
-			buffer[jHBufferPointer].packet.groupNum = packet_chat.groupNum;
-			buffer[jHBufferPointer].packet.sockId = packet_chat.sockId;
+			strcpy(packet_chat[newsock].data, buffer[jHBufferPointer].packet.data);
+			buffer[jHBufferPointer].packet.groupNum = packet_chat[newsock].groupNum;
+			buffer[jHBufferPointer].packet.sockId = packet_chat[newsock].sockId;
 			buffer[jHBufferPointer].isRead = 0;
 			
 			pthread_mutex_unlock(&buffer_mutex);
