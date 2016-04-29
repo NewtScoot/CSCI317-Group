@@ -105,10 +105,10 @@ void *multicaster()
         sleep(1);
         // mutex lock the buffer
         pthread_mutex_lock(&buffer_mutex);
-        
+        //printf("MADE IT HERE FIRST");
         // check if current position is null or read
         if(buffer[multicaster_pointer].isRead == 0){
-            
+            //printf("MADE IT HERE");
             // build packet for multicast by copying data from buffer packet
             strcpy(packet_multicast.data, buffer[multicaster_pointer].packet.data);
             packet_multicast.groupNum = buffer[multicaster_pointer].packet.groupNum;
@@ -147,7 +147,7 @@ void *multicaster()
         pthread_mutex_unlock(&buffer_mutex);
         
         // increment multicaster pointer
-        multicaster_pointer++;
+        multicaster_pointer += multicaster_pointer % BUFFER_SIZE;
     }
 
     

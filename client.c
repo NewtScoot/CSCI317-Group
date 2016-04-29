@@ -217,7 +217,6 @@ int main(int argc, char* argv[])
             // save sockId
             sockId = packet_rec.sockId;
             pthread_create(&thread, NULL, recv_thread, &s);
-            //pthread_join(threads[0],&exit_value);
             
             // holds text for chat message
             char chatMessage [100];
