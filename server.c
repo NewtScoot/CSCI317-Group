@@ -102,48 +102,56 @@ void *multicaster()
     
     
     while(1){
-        sleep(5);
+        //sleep(5);
         // mutex lock the buffer
         pthread_mutex_lock(&buffer_mutex);
         
-        printf("\n");
-        for(int i = 0; i < BUFFER_SIZE; i++){
-            printf("Space: %d ISREAD: %d\n", i, buffer[i].isRead);
-        }
+        //printf("\n");
+//        for(int i = 0; i < BUFFER_SIZE; i++){
+//            printf("Space: %d ISREAD: %d\n", i, buffer[i].isRead);
+//        }
         
-        printf("\nIsREAD: %d\n", (buffer[multicaster_pointer].isRead == 0));
+        //printf("\nIsREAD: %d\n", (buffer[multicaster_pointer].isRead == 0));
         // check if current position is null or read
         if(buffer[multicaster_pointer].isRead == 0){
-            printf("MADE IT HERE");
+            //printf("MADE IT HERE");
             // build packet for multicast by copying data from buffer packet
             strcpy(packet_multicast.data, buffer[multicaster_pointer].packet.data);
-            packet_multicast.groupNum = buffer[multicaster_pointer].packet.groupNum;
-            packet_multicast.sockId = buffer[multicaster_pointer].packet.sockId;
+            packet_multicast.groupNum = htons(buffer[multicaster_pointer].packet.groupNum);
+            packet_multicast.sockId = htons(buffer[multicaster_pointer].packet.sockId);
             packet_multicast.type = htons(CHAT_MESSAGE);
+            
+            printf("GroupNUM: %d\n", ntohs(packet_multicast.groupNum));
+            printf("SockID: %d\n", ntohs(packet_multicast.sockId));
+            printf("Type: %d\n", ntohs(packet_multicast.type));
+            printf("Data: %s\n", packet_multicast.data);
             
             // lock the table
             pthread_mutex_lock(&my_mutex);
-            
+            printf("\n");
             // send message to everyone in the table with request number > 3 and same group number
             // see if client is already in the global record table
-            for(int i = 0; i < TABLE_SIZE; i++){
+            for(int t = 0; t < recordTablePointer; t++){
+                //printf("Record-GroupNum: %d == Buffer-GroupNum: %d\n",record[i].groupNum , buffer[multicaster_pointer].packet.groupNum);
+                printf("GroupNum: %d ReqNo: %d Sock_Id: %d\n",record[t].groupNum , record[t].reqno, record[t].sockid);
                 
                 // if the record has at least 3 registration requests and matches the group number in the buffer
-                if(record[i].reqno >= 3 && record[i].groupNum == buffer[multicaster_pointer].packet.groupNum){
+                if(record[t].reqno >= 3 && record[t].groupNum == buffer[multicaster_pointer].packet.groupNum){
                     
                     // attempt to send the packet
-                    if(send(record[i].sockid,&packet_multicast,sizeof(packet_multicast),0) < 0)
+                    if(send(record[t].sockid,&packet_multicast,sizeof(packet_multicast),0) < 0)
                     {
                         printf("\n Send failed\n");
                         exit(1);
                     }
                     
                     // print sent message
-                    printf("\nSENT MULTICAST MESSAGE TO SOCKET_ID: %d\n", record[i].sockid);
+                    printf("\nSENT MULTICAST MESSAGE TO SOCKET_ID: %d\n", record[t].sockid);
                     printf("\tTYPE: %d\n", ntohs(packet_multicast.type));
                     printf("\tDATA: %s\n", packet_multicast.data);
                 }
             }
+            printf("\n");
             buffer[multicaster_pointer].isRead = 1;
             
             // unlock the table
@@ -197,6 +205,7 @@ void *join_handler(global_table *rec)
                 // mutex lock the global table
                 pthread_mutex_lock(&my_mutex);
                 
+                printf("\nRECORDTABLEPOINTER: %d\n", recordTablePointer);
                 //enter data in the record table
                 record[recordTablePointer].reqno = rec->reqno;
                 record[recordTablePointer].sockid = rec->sockid;
@@ -242,9 +251,9 @@ void *join_handler(global_table *rec)
             printf("Incoming chat message from SOCK_ID: %d for GROUP_NUM: %d\n", newsock, ntohs(packet_chat[newsock].groupNum));
 			
 			// Moving the Message info to the buffer
-			strcpy(packet_chat[newsock].data, buffer[jHBufferPointer].packet.data);
-			buffer[jHBufferPointer].packet.groupNum = packet_chat[newsock].groupNum;
-			buffer[jHBufferPointer].packet.sockId = packet_chat[newsock].sockId;
+			strcpy(buffer[jHBufferPointer].packet.data, packet_chat[newsock].data);
+			buffer[jHBufferPointer].packet.groupNum = ntohs(packet_chat[newsock].groupNum);
+			buffer[jHBufferPointer].packet.sockId = newsock;
 			buffer[jHBufferPointer].isRead = 0;
 			
 			pthread_mutex_unlock(&buffer_mutex);
@@ -343,7 +352,7 @@ int main(int argc, char* argv[])
                 client_info.sockid = new_s;
                 client_info.groupNum = ntohs(packet_rec.groupNum);
                 
-                printf("INCOMING... RECORD NOT FOUND: REQ_NO: %d  SOCK_ID: %d\n", client_info.reqno, client_info.sockid);
+                printf("INCOMING... RECORD NOT FOUND: REQ_NO: %d  SOCK_ID: %d GROUP_NUM: %d\n", client_info.reqno, client_info.sockid, client_info.groupNum);
                 
                 
                 pthread_create(&threads[new_s], NULL, join_handler, &client_info);

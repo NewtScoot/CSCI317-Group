@@ -49,7 +49,7 @@ void waitFor (unsigned int secs) {
 // join handler thread
 void *recv_thread(int *client_sockId)
 {
-    printf("client_sockId: %d\n", *client_sockId);
+    //printf("client_sockId: %d\n", *client_sockId);
     while(1){
         
         //Receive a reply from the server
@@ -63,8 +63,9 @@ void *recv_thread(int *client_sockId)
         if(htons(packet_multicast.type) == CHAT_MESSAGE){
             
             // print received message
-            printf("RECEIVED:\n");
-            printf("\tClient #%d says: %s\n", htons(packet_multicast.sockId), packet_multicast.data);
+            printf("\nRECEIVED:\n");
+            printf("\tClient %d says: %s\n", ntohs(packet_multicast.sockId), packet_multicast.data);
+            printf("Enter a message: ");
             //printf("\tTYPE: %d\n", htons(packet_multicast.type));
             //printf("\tSOCK_ID: %d\n", packet_multicast.sockId);
             //printf("\tChat Message: %s\n", packet_multicast.data);
@@ -238,9 +239,10 @@ int main(int argc, char* argv[])
                 }
                 sleep(1);
                 // print sent message
-                printf("SENT:\n");
+                printf("\nSENT:\n");
                 printf("\tTYPE: %d\n", ntohs(packet_reg.type));
                 printf("\tDATA: %s\n", packet_reg.data);
+                printf("Enter a message: ");
             }
         }
 //        // else if the message is from the multicaster
