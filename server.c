@@ -34,6 +34,7 @@
 #define RESP 231
 #define LEAVE 321
 #define CHAT_MESSAGE 421
+#define BUFFER_SIZE 10
 
 /* structure of Registration Table */
 struct registrationTable{
@@ -67,7 +68,7 @@ typedef struct {
 }circular_buffer;
 
 
-circular_buffer buffer[10];
+circular_buffer buffer[BUFFER_SIZE];
 int bufferPointer = 0;
 global_table record[TABLE_SIZE];
 struct packet packet_rec;
@@ -81,9 +82,11 @@ int foundInRecordTable = 0;
 int foundInRecordTableByJoinHandler = 0;
 int recordTablePointer = 0;
 int tableHasValues = 0;
+int multicaster_pointer = 0;
 
 // global mutex variable
 pthread_mutex_t my_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t buffer_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // waiting timer
 void waitFor (unsigned int secs) {
@@ -91,45 +94,35 @@ void waitFor (unsigned int secs) {
     while (time(0) < retTime);    // Loop until it arrives.
 }
 
+
+
 // multicaster thread
 void *multicaster()
 {
     
+    
     while(1){
-        // multicast every 5 seconds
-        //waitFor(5);
-//
-////        // mutex lock the global table
-        pthread_mutex_lock(&my_mutex);
-////        
-////        // check first record is global table to see
-////        //    if there is at least one client listed in the table
-////        if(tableHasValues == 1 ){
-////            
-////            // at least 1 client found
-////            // only run once
-////            // now only this once read the text file into memory
-////            if(packetContructed == 0){
-////                
-////                /* Constructing the multicast packet to send to clients */
-////                packet_multicast.type = htons(RESP);
-////
-////                // manually copy the message over since strcpy fails
-////                for(int i = 0; i < 100; i++){
-////                    packet_multicast.data[i] = text[i];
-////                }
-////                printf("\n");
-////                //strcpy(packet_multicast.data,text);  // this line fails so manually copied
-////                
-////                packetContructed++;
-////            }
-//        
-//            // send message to everyone in the table with request number > 3
+        
+        // mutex lock the buffer
+        pthread_mutex_lock(&buffer_mutex);
+        // check if current position is null or read
+        if(buffer[multicaster_pointer].isRead == 1){
+            
+            // build packet for multicast by copying data from buffer packet
+            strcpy(packet_multicast.data, buffer[multicaster_pointer].packet.data);
+            packet_multicast.groupNum = buffer[multicaster_pointer].packet.groupNum;
+            packet_multicast.sockId = buffer[multicaster_pointer].packet.sockId;
+            packet_multicast.type = htons(CHAT_MESSAGE);
+            
+            // lock the table
+            pthread_mutex_lock(&buffer_mutex);
+            
+            // send message to everyone in the table with request number > 3 and same group number
             // see if client is already in the global record table
             for(int i = 0; i < TABLE_SIZE; i++){
                 
-                // if the record has at least 3 registration requests
-                if(record[i].reqno >= 3){
+                // if the record has at least 3 registration requests and matches the group number in the buffer
+                if(record[i].reqno >= 3 && record[i].groupNum == buffer[multicaster_pointer].packet.groupNum){
                     
                     // attempt to send the packet
                     if(send(record[i].sockid,&packet_multicast,sizeof(packet_multicast),0) < 0)
@@ -144,11 +137,15 @@ void *multicaster()
                     printf("\tDATA: %s\n", packet_multicast.data);
                 }
             }
-        //}
-    
+            
+            // unlock the table
+            pthread_mutex_unlock(&buffer_mutex);
+        }
         // mutex unlock the global table
-        pthread_mutex_unlock(&my_mutex);
-    
+        pthread_mutex_unlock(&buffer_mutex);
+        
+        // increment multicaster pointer
+        multicaster_pointer++;
     }
 
     
@@ -239,6 +236,12 @@ void *join_handler(global_table *rec)
 
 int main(int argc, char* argv[])
 {
+    
+    // fill buffer with "read" packets to stop multicaster
+    for(int w = 0; w < BUFFER_SIZE; w++){
+        buffer[w].isRead = 0;
+    }
+    
     // declare variables
     short incomingPort;
     char *incomingAddress;
@@ -318,7 +321,7 @@ int main(int argc, char* argv[])
                 printf("INCOMING... RECORD NOT FOUND: REQ_NO: %d  SOCK_ID: %d\n", client_info.reqno, client_info.sockid);
                 
                 
-                pthread_create(&threads[new_s], NULL, join_handler, &client_info);
+                pthread_create(&threads[new_s+2], NULL, join_handler, &client_info);
                 //pthread_join(threads[0],&exit_value);
                 
             }
