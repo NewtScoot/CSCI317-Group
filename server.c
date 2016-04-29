@@ -102,11 +102,12 @@ void *multicaster()
     
     
     while(1){
-        
+        sleep(1);
         // mutex lock the buffer
         pthread_mutex_lock(&buffer_mutex);
+        
         // check if current position is null or read
-        if(buffer[multicaster_pointer].isRead == 1){
+        if(buffer[multicaster_pointer].isRead == 0){
             
             // build packet for multicast by copying data from buffer packet
             strcpy(packet_multicast.data, buffer[multicaster_pointer].packet.data);
@@ -115,7 +116,7 @@ void *multicaster()
             packet_multicast.type = htons(CHAT_MESSAGE);
             
             // lock the table
-            pthread_mutex_lock(&buffer_mutex);
+            pthread_mutex_lock(&my_mutex);
             
             // send message to everyone in the table with request number > 3 and same group number
             // see if client is already in the global record table
@@ -137,9 +138,10 @@ void *multicaster()
                     printf("\tDATA: %s\n", packet_multicast.data);
                 }
             }
+            buffer[multicaster_pointer].isRead = 1;
             
             // unlock the table
-            pthread_mutex_unlock(&buffer_mutex);
+            pthread_mutex_unlock(&my_mutex);
         }
         // mutex unlock the global table
         pthread_mutex_unlock(&buffer_mutex);
@@ -222,7 +224,7 @@ void *join_handler(global_table *rec)
             }
             
         }
-        else if(ntohs(packet_chat[newsock].type) == CHAT_MESSAGE && newsock == rec->sockid){
+        else if(ntohs(packet_chat[newsock].type) == CHAT_MESSAGE){
             
             // add message to buffer
 			pthread_mutex_lock(&buffer_mutex);
@@ -252,7 +254,7 @@ int main(int argc, char* argv[])
     
     // fill buffer with "read" packets to stop multicaster
     for(int w = 0; w < BUFFER_SIZE; w++){
-        buffer[w].isRead = 0;
+        buffer[w].isRead = 1;
     }
     
     // declare variables

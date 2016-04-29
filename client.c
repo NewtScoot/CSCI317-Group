@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
                 
                 // get input from the user for the chat room
                 printf("Enter a message: ");
-                scanf ( " %s", chatMessage);
+                scanf ( "%s", chatMessage);
                 strcpy(packet_reg.data, chatMessage);
                 packet_reg.type = htons(CHAT_MESSAGE);
                 
