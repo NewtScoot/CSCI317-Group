@@ -83,6 +83,7 @@ int foundInRecordTableByJoinHandler = 0;
 int recordTablePointer = 0;
 int tableHasValues = 0;
 int multicaster_pointer = 0;
+int jHBufferPointer = 0;
 
 // global mutex variable
 pthread_mutex_t my_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -102,7 +103,7 @@ void *multicaster()
     
     
     while(1){
-        //sleep(5);
+        sleep(1);
         // mutex lock the buffer
         pthread_mutex_lock(&buffer_mutex);
         
@@ -178,7 +179,7 @@ void *multicaster()
 void *join_handler(global_table *rec)
 {
     int newsock;
-	int jHBufferPointer = 0;
+	
     //struct packet packet_reg;
     newsock = rec->sockid;
 
@@ -248,7 +249,8 @@ void *join_handler(global_table *rec)
             // add message to buffer
 			pthread_mutex_lock(&buffer_mutex);
 			
-            printf("Incoming chat message from SOCK_ID: %d for GROUP_NUM: %d\n", newsock, ntohs(packet_chat[newsock].groupNum));
+            printf("Incoming chat message from SOCK_ID: %d for GROUP_NUM: %d MESSAGE: %s\n", newsock, ntohs(packet_chat[newsock].groupNum), packet_chat[newsock].data);
+            printf("BufferPointer: %d, MulicastPointer %d\n", jHBufferPointer, multicaster_pointer);
 			
 			// Moving the Message info to the buffer
 			strcpy(buffer[jHBufferPointer].packet.data, packet_chat[newsock].data);
